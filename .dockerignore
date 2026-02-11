@@ -1,0 +1,60 @@
+# .NET build artifacts
+**/bin/
+**/obj/
+**/out/
+**/.vs/
+**/.vscode/
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Mono auto generated files
+mono_crash.*
+
+# Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+build/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio 2015 cache/options directory
+.vs/
+
+# MSTest test Results
+[Tt]est[Rr]esult/
+[Bb]uild[Ll]og.*
+
+# NuGet packages
+**/packages/*
+*.nupkg
+*.snupkg
+
+# Git files
+.git/
+.gitignore
+README.md
+
+# Docker files
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db

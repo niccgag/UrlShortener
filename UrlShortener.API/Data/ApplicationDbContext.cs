@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using UrlShortener.API.Models;
 using UrlShortener.API.Settings;
 
@@ -10,8 +10,8 @@ namespace UrlShortener.API.Data
 
         public ApplicationDbContext(DbContextOptions options) : base(options)
         {
-			var folder = Environment.SpecialFolder.LocalApplicationData;
-			var path = Environment.GetFolderPath(folder);
+			// Use /app/data directory for database in container
+			var path = "/app/data";
 			DbPath = Path.Join(path, "urlShortening.db");
 		}
 
