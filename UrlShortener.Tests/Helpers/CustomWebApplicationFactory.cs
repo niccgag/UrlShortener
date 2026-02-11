@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using UrlShortener.API.Data;
+using UrlShortener.API.Settings;
 
 namespace UrlShortener.Tests.Helpers
 {
@@ -23,6 +25,13 @@ namespace UrlShortener.Tests.Helpers
                 services.AddDbContext<ApplicationDbContext>(options =>
                 {
                     options.UseInMemoryDatabase("TestDb");
+                });
+
+                // Ensure ShortLinkSettings is configured for tests
+                services.Configure<ShortLinkSettings>(options =>
+                {
+                    options.Length = 7;
+                    options.Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
                 });
             });
         }

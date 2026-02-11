@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using UrlShortener.API.Data;
 using UrlShortener.API.Models;
 using UrlShortener.API.Services;
@@ -11,6 +12,7 @@ namespace UrlShortener.Tests.Services
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly UrlShorteningService _service;
+        private readonly ShortLinkSettings _settings;
 
         public UrlShorteningServiceTests()
         {
@@ -18,8 +20,10 @@ namespace UrlShortener.Tests.Services
                 .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
                 .Options;
 
-            _dbContext = new ApplicationDbContext(options);
-            _service = new UrlShorteningService(_dbContext);
+            _settings = new ShortLinkSettings { Length = 7, Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" };
+            var settingsOptions = Options.Create(_settings);
+            _dbContext = new ApplicationDbContext(options, settingsOptions);
+            _service = new UrlShorteningService(_dbContext, settingsOptions);
         }
 
         public void Dispose()
@@ -32,7 +36,7 @@ namespace UrlShortener.Tests.Services
         {
             var code = await _service.GenerateUniqueCode();
 
-            Assert.Equal(ShortLinkSettings.Length, code.Length);
+            Assert.Equal(_settings.Length, code.Length);
         }
 
         [Fact]
@@ -40,7 +44,7 @@ namespace UrlShortener.Tests.Services
         {
             var code = await _service.GenerateUniqueCode();
 
-            Assert.All(code, c => Assert.Contains(c, ShortLinkSettings.Alphabet));
+            Assert.All(code, c => Assert.Contains(c, _settings.Alphabet));
         }
 
         [Fact]

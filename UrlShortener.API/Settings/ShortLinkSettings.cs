@@ -1,8 +1,8 @@
-﻿namespace UrlShortener.API.Settings
+namespace UrlShortener.API.Settings
 {
-	public static class ShortLinkSettings
+	public class ShortLinkSettings
 	{
-		public const int Length = 7;
-        public const string Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		public int Length { get; set; } = 7;
+		public string Alphabet { get; set; } = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 	}
 }

@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using UrlShortener.API.Data;
 using UrlShortener.API.Models;
 using UrlShortener.API.Services;
+using UrlShortener.API.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,6 +15,10 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddScoped<UrlShorteningService>();
 
+// Configure ShortLinkSettings from appsettings
+builder.Services.Configure<ShortLinkSettings>(
+    builder.Configuration.GetSection("ShortLinkSettings"));
+
 var app = builder.Build();
 
 // Ensure database is created
@@ -24,11 +29,8 @@ using (var scope = app.Services.CreateScope())
 }
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-	app.UseSwagger();
-	app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 

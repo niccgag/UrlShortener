@@ -102,15 +102,21 @@ docker-compose down
 
 ## Configuration
 
-The short link code settings can be modified in `UrlShortener.API/Settings/ShortLinkSettings.cs`:
+The short link code settings can be modified in `UrlShortener.API/appsettings.json`:
 
-```csharp
-public static class ShortLinkSettings
+```json
 {
-    public const int Length = 7;  // Length of generated short codes
-    public const string Alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  "ShortLinkSettings": {
+    "Length": 7,
+    "Alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+  }
 }
 ```
+
+- **Length**: Number of characters in generated short codes (default: 7)
+- **Alphabet**: Characters used to generate short codes
+
+You can also override these settings per environment using `appsettings.Development.json` or environment variables.
 
 ## Database
 
