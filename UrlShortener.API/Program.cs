@@ -14,15 +14,14 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddScoped<UrlShorteningService>();
 
+var app = builder.Build();
+
 // Ensure database is created
-using (var scope = builder.Services.BuildServiceProvider().CreateScope())
+using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     context.Database.EnsureCreated();
 }
-
-
-var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -41,7 +40,8 @@ app.MapPost("shorten", async (
 	ApplicationDbContext dbContext,
 	HttpContext httpContext) =>
 {
-	if (!Uri.TryCreate(request.Url, UriKind.Absolute, out _))
+	if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
+	    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
 	{
 		return Results.BadRequest("The specified URL is invalid.");
 	}
@@ -75,3 +75,5 @@ app.MapGet("{code}", async (string code, ApplicationDbContext dbContext) =>
 app.Run();
 
 public record ShortenUrlRequest(string Url);
+
+public partial class Program { }

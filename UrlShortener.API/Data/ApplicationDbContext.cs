@@ -15,6 +15,10 @@ namespace UrlShortener.API.Data
 			DbPath = Path.Join(path, "urlShortening.db");
 		}
 
+		public ApplicationDbContext()
+		{
+		}
+
         public DbSet<ShortenedUrl> ShortenedUrls { get; set; }
 
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -31,6 +35,13 @@ namespace UrlShortener.API.Data
 			});
 		}
 
-		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) => optionsBuilder.UseSqlite($"Data Source={DbPath}");
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		{
+			if (!optionsBuilder.IsConfigured)
+			{
+				var dbPath = DbPath ?? "urlShortening.db";
+				optionsBuilder.UseSqlite($"Data Source={dbPath}");
+			}
+		}
 	}
 }
