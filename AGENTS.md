@@ -1,10 +1,12 @@
 # AGENTS.md - AI Coding Assistant Guidelines
 
-## Build Commands
+## Build Commands (Local Development)
+
+For Docker-based development, use the Make commands below in the Docker Commands section.
 
 ```bash
-# Run both API and Web frontend together
-cd UrlShortener.Web && yarn && cd .. && yarn dev
+# Run both API and Web frontend together (uses concurrently)
+yarn dev
 
 # Run API only
 cd UrlShortener.API && dotnet run
@@ -45,22 +47,52 @@ dotnet test --filter "Category=Integration"
 
 ## Docker Commands
 
+### Using Make (Recommended)
+
 ```bash
-# Build and run with Docker Compose (both API and frontend)
-docker-compose up -d
+# Production mode (default)
+make up
+
+# Development mode (with hot reload)
+make dev
+
+# Stop all services
+make down
+
+# Build/rebuild services
+make build          # Production
+make build-dev      # Development
 
 # View logs
-docker-compose logs -f
+make logs           # Production
+make logs-dev       # Development
+
+# Clean up (removes volumes and images)
+make clean
+```
+
+### Using Docker Compose Directly
+
+```bash
+# Production mode
+docker compose up -d
+
+# Development mode (with hot reload)
+docker compose -f docker-compose.yml -f docker-compose.override.yml up -d
+
+# View logs
+docker compose logs -f
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Rebuild after changes
-docker-compose up -d --build
+docker compose up -d --build
 
 # Access services:
 # - Frontend: http://localhost:8081
 # - API: http://localhost:8080
+# - Redis: localhost:6379
 ```
 
 ## Database Commands

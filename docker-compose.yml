@@ -1,6 +1,20 @@
 version: '3.8'
 
 services:
+  redis:
+    image: redis:8.4-alpine
+    container_name: urlshortener-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
   urlshortener-api:
     build:
       context: .
@@ -11,8 +25,12 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
       - ASPNETCORE_URLS=http://+:80
+      - Redis__ConnectionString=urlshortener-redis:6379
     volumes:
       - sqlite_data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:80/nonexistent | grep -q '404' || exit 1"]
@@ -25,6 +43,7 @@ services:
     build:
       context: .
       dockerfile: UrlShortener.Web/Dockerfile
+      target: production
     container_name: urlshortener-web
     ports:
       - "8081:80"
@@ -34,4 +53,6 @@ services:
 
 volumes:
   sqlite_data:
+    driver: local
+  redis_data:
     driver: local

@@ -16,7 +16,7 @@ COPY UrlShortener.Web/ .
 RUN yarn build
 
 # Production stage
-FROM nginx:alpine
+FROM nginx:alpine AS production
 
 # Copy built assets from build stage
 COPY --from=build /app/dist /usr/share/nginx/html
@@ -28,3 +28,23 @@ COPY UrlShortener.Web/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80
 
 CMD ["nginx", "-g", "daemon off;"]
+
+# Development stage
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+# Copy package files
+COPY UrlShortener.Web/package.json UrlShortener.Web/yarn.lock ./
+
+# Install dependencies (including dev dependencies)
+RUN yarn install
+
+# Copy source code
+COPY UrlShortener.Web/ .
+
+# Expose port 80
+EXPOSE 80
+
+# Run in development mode
+CMD ["yarn", "dev", "--host", "0.0.0.0", "--port", "80"]

@@ -1,10 +1,37 @@
 using Microsoft.EntityFrameworkCore;
+using StackExchange.Redis;
 using UrlShortener.API.Data;
 using UrlShortener.API.Models;
 using UrlShortener.API.Services;
 using UrlShortener.API.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Redis with graceful fallback
+builder.Services.AddSingleton<IConnectionMultiplexer>(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var logger = serviceProvider.GetRequiredService<ILogger<Program>>();
+    var connectionString =
+        configuration.GetValue<string>("Redis:ConnectionString", "localhost:6379")
+        ?? "localhost:6379";
+
+    try
+    {
+        var options = ConfigurationOptions.Parse(connectionString);
+        options.AbortOnConnectFail = false;
+        options.ConnectTimeout = 5000;
+        return ConnectionMultiplexer.Connect(options);
+    }
+    catch (Exception ex)
+    {
+        logger.LogWarning(ex, "Redis connection failed. Application will run without caching.");
+        return ConnectionMultiplexer.Connect("localhost:6379,abortConnect=false,connectTimeout=1");
+    }
+});
+
+// Register cache service
+builder.Services.AddScoped<IUrlCacheService, UrlCacheService>();
 
 // Add services to the container.
 builder.Services.AddAuthorization();
@@ -56,7 +83,8 @@ app.MapPost(
     async (
         ShortenUrlRequest request,
         UrlShorteningService urlShorteningService,
-        ApplicationDbContext dbContext
+        ApplicationDbContext dbContext,
+        IUrlCacheService cache
     ) =>
     {
         if (
@@ -79,19 +107,33 @@ app.MapPost(
 
         dbContext.ShortenedUrls.Add(shortenedUrl);
         await dbContext.SaveChangesAsync();
+
+        await cache.SetAsync(code, request.Url);
+
         return Results.Ok(code);
     }
 );
 
 app.MapGet(
     "{code}",
-    async (string code, ApplicationDbContext dbContext) =>
+    async (string code, ApplicationDbContext dbContext, IUrlCacheService cache) =>
     {
+        // Try to get from cache first
+        var cachedUrl = await cache.GetAsync(code);
+        if (cachedUrl is not null)
+        {
+            return Results.Redirect(cachedUrl);
+        }
+
+        // Fall back to database
         var shortendUrl = await dbContext.ShortenedUrls.SingleOrDefaultAsync(s => s.Code == code);
         if (shortendUrl is null)
         {
             return Results.NotFound();
         }
+
+        await cache.SetAsync(code, shortendUrl.LongUrl);
+
         return Results.Redirect(shortendUrl.LongUrl);
     }
 );

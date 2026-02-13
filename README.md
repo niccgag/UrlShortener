@@ -115,32 +115,44 @@ Open your browser to:
 
 ### Running with Docker
 
-Both the API and frontend can be run in Docker containers:
+The easiest way to run the entire stack is using Make:
 
-1. Build and run with Docker Compose:
 ```bash
-docker-compose up -d
+# Production mode (default)
+make up
+
+# Development mode (with hot reload)
+make dev
+
+# View logs
+make logs
+
+# Stop services
+make down
 ```
 
-2. Access the services:
+**Access the services:**
    - **Frontend**: `http://localhost:8081`
    - **API**: `http://localhost:8080`
-
-3. View logs:
-```bash
-docker-compose logs -f
-```
-
-4. Stop the service:
-```bash
-docker-compose down
-```
+   - **Redis**: `localhost:6379`
 
 **Docker Architecture:**
 - **urlshortener-api**: .NET 8.0 API (port 8080)
 - **urlshortener-web**: Vue 3 frontend served by Nginx (port 8081)
+- **redis**: Redis 8.4 for URL caching (port 6379)
 - Nginx proxies API requests from frontend to backend
 - SQLite database persisted in Docker volume
+
+**Available Make Commands:**
+- `make up` - Start in production mode
+- `make dev` - Start in development mode with hot reload
+- `make down` - Stop all services
+- `make build` - Build production images
+- `make build-dev` - Build development images
+- `make logs` - View production logs
+- `make logs-dev` - View development logs
+- `make clean` - Clean up volumes and images
+- `make test` - Run tests
 
 ## Configuration
 
