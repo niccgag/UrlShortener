@@ -31,8 +31,10 @@ Creates a shortened URL from a long URL.
 
 **Response:**
 ```
-"https://localhost:5000/abc1234"
+"abc1234"
 ```
+
+The frontend constructs the full shortened URL using the current domain (e.g., `http://localhost:5173/abc1234`).
 
 **Validation:**
 - Only valid absolute URLs with HTTP/HTTPS schemes are accepted
@@ -48,47 +50,81 @@ Redirects to the original URL associated with the short code.
 
 ## Technology Stack
 
+### Backend
 - **.NET 8.0**: Modern, high-performance web framework
 - **ASP.NET Core**: Web API framework
 - **Entity Framework Core**: Object-relational mapper for database operations
 - **SQLite**: Lightweight, serverless database
 - **Swashbuckle**: Swagger/OpenAPI documentation generation
-- **Docker**: Containerization for easy deployment
 - **xUnit**: Testing framework with integration tests
+
+### Frontend
+- **Vue 3**: Progressive JavaScript framework with Composition API
+- **TypeScript**: Type-safe JavaScript
+- **Vite**: Fast build tool and dev server
+- **Axios**: HTTP client for API communication
+
+### Infrastructure
+- **Docker**: Containerization for easy deployment
 
 ## Getting Started
 
 ### Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
+- [Node.js 18+](https://nodejs.org/) and Yarn (for frontend)
 - [Docker](https://docs.docker.com/get-docker/) (optional, for containerized deployment)
 
 ### Running Locally
 
-1. Clone the repository:
+#### Quick Start - Run Everything
+
+The easiest way to run both the API and frontend with a single command:
+
 ```bash
-git clone <repository-url>
-cd UrlShortener
+# Install dependencies and run both services
+cd UrlShortener.Web && yarn && cd .. && yarn dev
 ```
 
-2. Run the application:
+This will start:
+- **API** at `http://localhost:5000`
+- **Frontend** at `http://localhost:5173`
+
+#### Running API Only
+
 ```bash
 cd UrlShortener.API
 dotnet run
 ```
 
-3. Open your browser to:
-   - API: `http://localhost:5000`
-   - Swagger UI: `http://localhost:5000/swagger`
+Open your browser to:
+- API: `http://localhost:5000`
+- Swagger UI: `http://localhost:5000/swagger`
+
+#### Running Frontend Only
+
+```bash
+cd UrlShortener.Web
+yarn
+cd UrlShortener.Web
+yarn dev
+```
+
+Open your browser to:
+- Frontend: `http://localhost:5173`
 
 ### Running with Docker
+
+Both the API and frontend can be run in Docker containers:
 
 1. Build and run with Docker Compose:
 ```bash
 docker-compose up -d
 ```
 
-2. The API will be available at `http://localhost:8080`
+2. Access the services:
+   - **Frontend**: `http://localhost:8081`
+   - **API**: `http://localhost:8080`
 
 3. View logs:
 ```bash
@@ -99,6 +135,12 @@ docker-compose logs -f
 ```bash
 docker-compose down
 ```
+
+**Docker Architecture:**
+- **urlshortener-api**: .NET 8.0 API (port 8080)
+- **urlshortener-web**: Vue 3 frontend served by Nginx (port 8081)
+- Nginx proxies API requests from frontend to backend
+- SQLite database persisted in Docker volume
 
 ## Configuration
 
@@ -171,7 +213,15 @@ UrlShortener/
 │   ├── Integration/               # Integration tests
 │   ├── Services/                  # Unit tests
 │   └── Helpers/                   # Test utilities
-├── Dockerfile                     # Docker image definition
+├── UrlShortener.Web/              # Vue 3 frontend
+│   ├── src/
+│   │   ├── components/            # Vue components
+│   │   └── services/              # API client
+│   ├── Dockerfile                 # Frontend Docker image
+│   ├── nginx.conf                 # Nginx configuration
+│   ├── package.json
+│   └── vite.config.ts
+├── Dockerfile                     # Backend Docker image
 ├── docker-compose.yml             # Docker Compose configuration
 └── README.md
 ```

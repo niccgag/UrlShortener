@@ -15,9 +15,22 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>();
 builder.Services.AddScoped<UrlShorteningService>();
 
+// Configure CORS to allow frontend requests
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "AllowFrontend",
+        policy =>
+        {
+            policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader();
+        }
+    );
+});
+
 // Configure ShortLinkSettings from appsettings
 builder.Services.Configure<ShortLinkSettings>(
-    builder.Configuration.GetSection("ShortLinkSettings"));
+    builder.Configuration.GetSection("ShortLinkSettings")
+);
 
 var app = builder.Build();
 
@@ -34,45 +47,54 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+app.UseCors("AllowFrontend");
+
 app.UseAuthorization();
 
-app.MapPost("shorten", async (
-	ShortenUrlRequest request,
-	UrlShorteningService urlShorteningService,
-	ApplicationDbContext dbContext,
-	HttpContext httpContext) =>
-{
-	if (!Uri.TryCreate(request.Url, UriKind.Absolute, out var uri) ||
-	    (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
-	{
-		return Results.BadRequest("The specified URL is invalid.");
-	}
+app.MapPost(
+    "shorten",
+    async (
+        ShortenUrlRequest request,
+        UrlShorteningService urlShorteningService,
+        ApplicationDbContext dbContext
+    ) =>
+    {
+        if (
+            !Uri.TryCreate(request.Url, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps)
+        )
+        {
+            return Results.BadRequest("The specified URL is invalid.");
+        }
 
-	var code = await urlShorteningService.GenerateUniqueCode();
-	var httpRequest = httpContext.Request;
-	var shortenedUrl = new ShortenedUrl
-	{
-		Id = Guid.NewGuid(),
-		LongUrl = request.Url,
-		Code = code,
-		ShortUrl = $"{httpRequest.Scheme}://{httpRequest.Host}/{code}",
-		CreatedOnUtc = DateTime.UtcNow
-	};
+        var code = await urlShorteningService.GenerateUniqueCode();
+        var shortenedUrl = new ShortenedUrl
+        {
+            Id = Guid.NewGuid(),
+            LongUrl = request.Url,
+            Code = code,
+            ShortUrl = code,
+            CreatedOnUtc = DateTime.UtcNow,
+        };
 
-	dbContext.ShortenedUrls.Add(shortenedUrl);
-	await dbContext.SaveChangesAsync();
-	return Results.Ok(shortenedUrl.ShortUrl);
-});
+        dbContext.ShortenedUrls.Add(shortenedUrl);
+        await dbContext.SaveChangesAsync();
+        return Results.Ok(code);
+    }
+);
 
-app.MapGet("{code}", async (string code, ApplicationDbContext dbContext) =>
-{
-	var shortendUrl = await dbContext.ShortenedUrls.SingleOrDefaultAsync(s => s.Code == code);
-	if (shortendUrl is null)
-	{
-		return Results.NotFound();
-	}
-	return Results.Redirect(shortendUrl.LongUrl);
-});
+app.MapGet(
+    "{code}",
+    async (string code, ApplicationDbContext dbContext) =>
+    {
+        var shortendUrl = await dbContext.ShortenedUrls.SingleOrDefaultAsync(s => s.Code == code);
+        if (shortendUrl is null)
+        {
+            return Results.NotFound();
+        }
+        return Results.Redirect(shortendUrl.LongUrl);
+    }
+);
 
 app.Run();
 

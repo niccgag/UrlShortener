@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  urlshortener:
+  urlshortener-api:
     build:
       context: .
       dockerfile: Dockerfile
@@ -20,6 +20,17 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  urlshortener-web:
+    build:
+      context: .
+      dockerfile: UrlShortener.Web/Dockerfile
+    container_name: urlshortener-web
+    ports:
+      - "8081:80"
+    depends_on:
+      - urlshortener-api
+    restart: unless-stopped
 
 volumes:
   sqlite_data:
